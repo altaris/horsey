@@ -1,6 +1,7 @@
 #ifndef CHESSBOARD_H
 #define CHESSBOARD_H
 
+#include "chesspiece.h"
 #include <QGraphicsWidget>
 
 /**
@@ -16,9 +17,14 @@ class ChessBoard : public QGraphicsWidget
                const QColor& darkColor,
                QGraphicsItem* parent = nullptr);
 
-    void paint(QPainter* painter,
-               const QStyleOptionGraphicsItem* option,
-               QWidget* widget = nullptr) override;
+    /**
+     * @brief addPiece Adds a piece onto the board.
+     * @return A pointer to the piece that was added.
+     * @todo Fail if the square is occupied.
+     */
+    ChessPiece* addPiece(ChessPiece::Piece piece,
+                         ChessPiece::Color color,
+                         int squareIndex);
 
     /**
      * @brief Graphics scene coordinates of a given square
@@ -28,6 +34,21 @@ class ChessBoard : public QGraphicsWidget
      * @todo Throw if index is invalid
      */
     QPoint positionOfSquare(int index) const;
+
+  private:
+    /**
+     * @brief Returns the square index (from a1 to a2 to ... to h8) of a given
+     * piece.
+     * @return The index, which is an number between 0 and 63. Returns -1 if the
+     * piece does not belong or is not on this board.
+     *
+     * The index is calculated from the position (in the graphics scene) of the
+     * piece.
+     */
+    int squareIndexOfPiece(ChessPiece* piece) const;
+
+  private slots:
+    void onPieceRequestToMove(QPointF newPosition);
 
   private:
     /**
@@ -45,6 +66,8 @@ class ChessBoard : public QGraphicsWidget
      * @brief darkColor Color of the dark squares.
      */
     QColor darkColor;
+    QSet<ChessPiece*> pieces;
+    QHash<ChessPiece*, int> lastValidPieceIndex;
 };
 
 #endif // CHESSBOARD_H

@@ -27,7 +27,6 @@ ChessBoard::ChessBoard(int squareSize,
             square->setBrush(color);
         }
     }
-
     for (int i = 1; i <= 8; i++) {
         QString label = QString::number(i);
         QGraphicsTextItem* rankLabel = new QGraphicsTextItem(label, this);
@@ -37,7 +36,6 @@ ChessBoard::ChessBoard(int squareSize,
         float y = -i * squareSize + squareSize / 2 - h / 2;
         rankLabel->setPos(x, y);
     }
-
     char fileNames[8] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' };
     for (int i = 0; i < 8; i++) {
         QString label(fileNames[i]);
@@ -50,6 +48,38 @@ ChessBoard::ChessBoard(int squareSize,
     }
 }
 
+ChessPiece*
+ChessBoard::addPiece(ChessPiece::Piece piece,
+                     ChessPiece::Color color,
+                     int squareIndex)
+{
+    ChessPiece* cp = new ChessPiece(
+      piece, color, ChessPiece::MeridaNew, squareSize, 256, this);
+    pieces.insert(cp);
+    connect(
+      cp, &ChessPiece::requestToMove, this, &ChessBoard::onPieceRequestToMove);
+    cp->setPos(positionOfSquare(squareIndex));
+    lastValidPieceIndex.insert(cp, squareIndex);
+    return cp;
+}
+
+void
+ChessBoard::onPieceRequestToMove(QPointF newPosition)
+{
+    ChessPiece* piece = qobject_cast<ChessPiece*>(sender());
+    if (piece == nullptr) {
+        qWarning() << "Activated slot ChessBoard::onPieceRequestToMove but "
+                      "sender is not a ChessPiece.";
+        return;
+    }
+    // TODO: validate new position
+    bool moveAllowed = true;
+    if (moveAllowed) {
+        piece->setPos(newPosition);
+    } else {
+        piece->setPos(positionOfSquare(lastValidPieceIndex[piece]));
+    }
+}
 
 QPoint
 ChessBoard::positionOfSquare(int index) const
@@ -59,8 +89,17 @@ ChessBoard::positionOfSquare(int index) const
     return QPoint(file * squareSize, -rank * squareSize - 100);
 }
 
-void
-ChessBoard::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*)
+int
+ChessBoard::squareIndexOfPiece(ChessPiece* piece) const
 {
-    Q_UNUSED(painter);
+    if (!pieces.contains(piece)) {
+        return -1;
+    }
+    QPoint p = piece->pos().toPoint();
+    if (!boundingRect().contains(p)) {
+        return -1;
+    }
+    int x = p.x() / squareSize;
+    int y = -p.y() / squareSize - 1;
+    return 8 * y + x;
 }

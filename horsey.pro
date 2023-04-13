@@ -10,6 +10,7 @@ SOURCES += \
 HEADERS += \
     chessboard.h \
     chesspiece.h \
+    global.h \
     mainwindow.h
 
 FORMS += \

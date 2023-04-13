@@ -18,13 +18,8 @@ MainWindow::MainWindow(QWidget* parent)
     scene->addItem(board);
     ui->graphicsView->ensureVisible(board->boundingRect(), 10, 10);
 
-    ChessPiece* bishop =
-      new ChessPiece(":/rc/pieces/merida_new/wB.svg", 100, 256, board);
-    bishop->setPos(board->positionOfSquare(10));
-
-    ChessPiece* king =
-      new ChessPiece(":/rc/pieces/merida_new/bK.svg", 100, 256, board);
-    king->setPos(board->positionOfSquare(30));
+    board->addPiece(ChessPiece::Bishop, ChessPiece::White, 10);
+    board->addPiece(ChessPiece::King, ChessPiece::Black, 30);
 }
 
 MainWindow::~MainWindow()
