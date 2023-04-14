@@ -23,34 +23,6 @@ ChessPiece::ChessPiece(Piece piece,
 }
 
 void
-ChessPiece::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
-{
-    QPoint scenePos = event->scenePos().toPoint();
-    QRect boardRect(0, -8 * size, 8 * size, 8 * size);
-    if (boardRect.contains(scenePos)) {
-        setPos(event->scenePos() - boundingRect().center());
-    }
-}
-
-void
-ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent*)
-{
-    setCursor(Qt::ClosedHandCursor);
-}
-
-void
-ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
-{
-    QPoint scenePos = event->scenePos().toPoint();
-    int x = scenePos.x();
-    int y = scenePos.y();
-    x -= x % size;
-    y -= y % size + size;
-    setCursor(Qt::OpenHandCursor);
-    emit requestToMove(QPointF(x, y));
-}
-
-void
 ChessPiece::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*)
 {
     QImage img(resolution, resolution, QImage::Format_ARGB32_Premultiplied);

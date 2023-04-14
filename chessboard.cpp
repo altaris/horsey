@@ -1,3 +1,5 @@
+#include <QCursor>
+#include <QGraphicsSceneMouseEvent>
 #include <QGraphicsTextItem>
 #include <QPainter>
 #include <QString>
@@ -46,6 +48,8 @@ ChessBoard::ChessBoard(int squareSize,
         float y = margin;
         fileLabel->setPos(x, y);
     }
+    setAcceptedMouseButtons(Qt::LeftButton | Qt::RightButton);
+    setHandlesChildEvents(true);
 }
 
 ChessPiece*
@@ -55,30 +59,108 @@ ChessBoard::addPiece(ChessPiece::Piece piece,
 {
     ChessPiece* cp = new ChessPiece(
       piece, color, ChessPiece::MeridaNew, squareSize, 256, this);
-    pieces.insert(cp);
-    connect(
-      cp, &ChessPiece::requestToMove, this, &ChessBoard::onPieceRequestToMove);
     cp->setPos(positionOfSquare(squareIndex));
     lastValidPieceIndex.insert(cp, squareIndex);
     return cp;
 }
 
-void
-ChessBoard::onPieceRequestToMove(QPointF newPosition)
+QRectF
+ChessBoard::boundingRect() const
 {
-    ChessPiece* piece = qobject_cast<ChessPiece*>(sender());
-    if (piece == nullptr) {
-        qWarning() << "Activated slot ChessBoard::onPieceRequestToMove but "
-                      "sender is not a ChessPiece.";
+    return QRect(QPoint(0, -8 * squareSize),
+                 QSize(8 * squareSize, 8 * squareSize));
+}
+
+void
+ChessBoard::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
+{
+    QPoint scenePos = event->scenePos().toPoint();
+    int index = squareIndexOfPoint(scenePos);
+    if (event->buttons() & Qt::LeftButton) {
+        ChessPiece* piece =
+          currentPiece == nullptr ? pieceAtSquare(index) : currentPiece;
+        if (piece != nullptr) {
+            if (boundingRect().contains(scenePos)) {
+                piece->setPos(scenePos - piece->boundingRect().center());
+            }
+        }
+    }
+}
+
+void
+ChessBoard::mousePressEvent(QGraphicsSceneMouseEvent* event)
+{
+    QPoint scenePos = event->scenePos().toPoint();
+    int index = squareIndexOfPoint(scenePos);
+    if (event->button() == Qt::LeftButton) {
+        ChessPiece* piece =
+          currentPiece == nullptr ? pieceAtSquare(index) : currentPiece;
+        if (piece != nullptr) {
+            currentPiece = piece;
+            setCursor(Qt::ClosedHandCursor);
+        }
+    }
+}
+
+void
+ChessBoard::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
+{
+    if (event->button() != Qt::LeftButton) {
         return;
     }
-    // TODO: validate new position
-    bool moveAllowed = true;
-    if (moveAllowed) {
-        piece->setPos(newPosition);
-    } else {
-        piece->setPos(positionOfSquare(lastValidPieceIndex[piece]));
+    QPoint scenePos = event->scenePos().toPoint();
+    int index = squareIndexOfPoint(scenePos);
+    if (event->button() == Qt::LeftButton) {
+        ChessPiece* piece =
+          currentPiece == nullptr ? pieceAtSquare(index) : currentPiece;
+        if (piece != nullptr) {
+            if (pieceCanMove(piece, index)) {
+                movePiece(lastValidPieceIndex[piece], index);
+            } else {
+                piece->setPos(positionOfSquare(lastValidPieceIndex[piece]));
+            }
+        }
+        currentPiece = nullptr;
     }
+    setCursor(Qt::OpenHandCursor);
+}
+
+bool
+ChessBoard::movePiece(int from, int to)
+{
+    ChessPiece* piece = pieceAtSquare(from);
+    if (piece == nullptr || pieceAtSquare(to) != nullptr) {
+        return false;
+    }
+    piece->setPos(positionOfSquare(to));
+    lastValidPieceIndex[piece] = to;
+    return true;
+}
+
+ChessPiece*
+ChessBoard::pieceAtSquare(int index) const
+{
+    if (index < 0 or index >= 64) {
+        qWarning() << "Invalid square index" << index;
+        return nullptr;
+    }
+    for (auto it = lastValidPieceIndex.constKeyValueBegin();
+         it != lastValidPieceIndex.constKeyValueEnd();
+         it++) {
+        if (it->second == index) {
+            return it->first;
+        }
+    }
+    return nullptr;
+}
+
+bool
+ChessBoard::pieceCanMove(ChessPiece* piece, int to) const
+{
+    // Mock implementation
+    Q_UNUSED(piece);
+    bool noPiecePresent = pieceAtSquare(to) == nullptr;
+    return to >= 0 && noPiecePresent;
 }
 
 QPoint
@@ -89,17 +171,30 @@ ChessBoard::positionOfSquare(int index) const
     return QPoint(file * squareSize, -rank * squareSize - 100);
 }
 
-int
-ChessBoard::squareIndexOfPiece(ChessPiece* piece) const
+bool
+ChessBoard::removePiece(int index)
 {
-    if (!pieces.contains(piece)) {
+    ChessPiece* piece = pieceAtSquare(index);
+    if (piece == nullptr) {
+        return false;
+    }
+    lastValidPieceIndex.remove(piece);
+    piece->deleteLater();
+    return true;
+}
+int
+ChessBoard::squareIndexOfPoint(const QPoint& point) const
+{
+    if (!boundingRect().contains(point)) {
         return -1;
     }
-    QPoint p = piece->pos().toPoint();
-    if (!boundingRect().contains(p)) {
-        return -1;
-    }
-    int x = p.x() / squareSize;
-    int y = -p.y() / squareSize - 1;
+    int x = point.x() / squareSize;
+    int y = -point.y() / squareSize;
     return 8 * y + x;
+}
+
+int
+ChessBoard::squareIndexOfPoint(const QPointF& point) const
+{
+    return squareIndexOfPoint(point.toPoint());
 }

@@ -66,12 +66,7 @@ class ChessPiece : public QGraphicsWidget
                QWidget* widget = nullptr) override;
 
   signals:
-    void requestToMove(QPointF newPosition);
-
-  protected:
-    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
-    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+    void requestNewSquare(QPointF newPosition);
 
   private:
     /**

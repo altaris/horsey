@@ -11,6 +11,7 @@
 class ChessBoard : public QGraphicsWidget
 {
     Q_OBJECT
+
   public:
     ChessBoard(int squareSize,
                const QColor& lightColor,
@@ -26,6 +27,18 @@ class ChessBoard : public QGraphicsWidget
                          ChessPiece::Color color,
                          int squareIndex);
 
+    QRectF boundingRect() const override;
+
+    /**
+     * @brief movePiece Moves a piece from a square (specified by its index) to
+     * another square.
+     * @param from
+     * @param to
+     * @return `false` if there is no piece in `from`, or if there is another
+     * piece in `to`.
+     */
+    bool movePiece(int from, int to);
+
     /**
      * @brief Graphics scene coordinates of a given square
      * @param index Square index, from a1 (index 0) to a2 (index 1) to ... to h8
@@ -35,20 +48,56 @@ class ChessBoard : public QGraphicsWidget
      */
     QPoint positionOfSquare(int index) const;
 
+    /**
+     * @brief removePiece Removes a piece from a given square (specified by its
+     * index).
+     * @param squareIndex
+     * @return `false` if no piece was present, otherwise `true`.
+     *
+     * Wether or not a piece is present on that square is checked using
+     * ChessBoard::lastValidPieceIndex;
+     */
+    bool removePiece(int index);
+
+  protected:
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+
   private:
     /**
-     * @brief Returns the square index (from a1 to a2 to ... to h8) of a given
-     * piece.
-     * @return The index, which is an number between 0 and 63. Returns -1 if the
-     * piece does not belong or is not on this board.
-     *
-     * The index is calculated from the position (in the graphics scene) of the
-     * piece.
+     * @brief pieceAtSquare Returns the piece at a given square.
+     * @param index Square index (from a1 to a2 to ...
+     * to h8).
+     * @return The piece pointer, or `nullptr` if no piece is present.
+     * @warning This method does not consider the actual position of the piece
+     * in the graphics scene, but rather the last valid square of each piece.
+     * This prevents some weird behavior when pieces are being dragged over the
+     * board.
      */
-    int squareIndexOfPiece(ChessPiece* piece) const;
+    ChessPiece* pieceAtSquare(int index) const;
 
-  private slots:
-    void onPieceRequestToMove(QPointF newPosition);
+    /**
+     * @brief pieceCanMove Wether a piece can move to a given square (specified
+     * by its index).
+     * @param piece
+     * @param to
+     * @return
+     * @todo Implement game logic (or most probably, raise a PieceMoveRequest to
+     * be processed and accepted/rejected by another class up the chain.
+     */
+    bool pieceCanMove(ChessPiece* piece, int to) const;
+
+    /**
+     * @brief squareIndexOfPoint Returns the square index (from a1 to a2 to ...
+     * to h8) of the square containing a given point.
+     * @param point
+     * @return The index, which is an number between 0 and 63. Returns -1 if the
+     * point is not on this board.
+     */
+    int squareIndexOfPoint(const QPoint& point) const;
+
+    int squareIndexOfPoint(const QPointF& point) const;
 
   private:
     /**
@@ -58,16 +107,23 @@ class ChessBoard : public QGraphicsWidget
      * squareSize)`.
      */
     int squareSize;
+
     /**
      * @brief lightColor Color of the light squares.
      */
     QColor lightColor;
+
     /**
      * @brief darkColor Color of the dark squares.
      */
     QColor darkColor;
-    QSet<ChessPiece*> pieces;
+
     QHash<ChessPiece*, int> lastValidPieceIndex;
+
+    /**
+     * @brief currentPiece Piece that is currently being dragged;
+     */
+    ChessPiece* currentPiece = nullptr;
 };
 
 #endif // CHESSBOARD_H
