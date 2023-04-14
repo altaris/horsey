@@ -89,6 +89,13 @@ class ChessBoard : public QGraphicsWidget
     bool pieceCanMove(ChessPiece* piece, int to) const;
 
     /**
+     * @brief setSquareHighlighted Set highlight status of a square
+     * @param index
+     * @todo Allow to change highlight color
+     */
+    void setSquareHighlighted(int index, bool highlighted = true);
+
+    /**
      * @brief squareIndexOfPoint Returns the square index (from a1 to a2 to ...
      * to h8) of the square containing a given point.
      * @param point
@@ -98,6 +105,11 @@ class ChessBoard : public QGraphicsWidget
     int squareIndexOfPoint(const QPoint& point) const;
 
     int squareIndexOfPoint(const QPointF& point) const;
+
+    /**
+     * @brief unhighlightAllSquares Reverts the color of all squares.
+     */
+    void unhighlightAllSquares();
 
   private:
     /**
@@ -119,6 +131,12 @@ class ChessBoard : public QGraphicsWidget
     QColor darkColor;
 
     QHash<ChessPiece*, int> lastValidPieceIndex;
+
+    /**
+     * @brief squares Squares of the board, sorted by index (i.e a1 to a2 to ...
+     * to h8).
+     */
+    QList<QGraphicsRectItem*> squares;
 
     /**
      * @brief currentPiece Piece that is currently being dragged;
