@@ -111,6 +111,78 @@ class ChessBoard : public QGraphicsWidget
      */
     void unhighlightAllSquares();
 
+    /**
+     * @brief leftButtonMoveEvent Dispatched from ChessBoard::mouseMoveEvent
+     * @param position Scene position, **not** guaranteed to be in the board's
+     * bounding box (which encompasses the squares but not the margin or
+     * rank/file labels)
+     * @param index Square index
+     * @param event
+     */
+    void leftButtonMoveEvent(QPoint position,
+                             int index,
+                             QGraphicsSceneMouseEvent* event);
+    /**
+     * @brief leftButtonPressEvent Dispatched from ChessBoard::mousePressEvent
+     * @param position Scene position, guaranteed to be in the board's bounding
+     * box (which encompasses the squares but not the margin or rank/file
+     * labels)
+     * @param index Square index
+     * @param event
+     */
+    void leftButtonPressEvent(QPoint position,
+                              int index,
+                              QGraphicsSceneMouseEvent* event);
+
+    /**
+     * @brief leftButtonReleaseEvent Dispatched from
+     * ChessBoard::mouseReleaseEvent
+     * @param position Scene position, **no** guaranteed to be in the board's
+     * bounding box (which encompasses the squares but not the margin or
+     * rank/file labels)
+     * @param index Square index
+     * @param event
+     */
+    void leftButtonReleaseEvent(QPoint position,
+                                int index,
+                                QGraphicsSceneMouseEvent* event);
+
+    /**
+     * @brief rightButtonMoveEvent Dispatched from ChessBoard::mouseMoveEvent
+     * @param position Scene position, **no** guaranteed to be in the board's
+     * bounding box (which encompasses the squares but not the margin or
+     * rank/file labels)
+     * @param index Square index
+     * @param event
+     */
+    void rightButtonMoveEvent(QPoint position,
+                              int index,
+                              QGraphicsSceneMouseEvent* event);
+    /**
+     * @brief rightButtonPressEvent Dispatched from ChessBoard::mousePressEvent
+     * @param position Scene position, guaranteed to be in the board's bounding
+     * box (which encompasses the squares but not the margin or rank/file
+     * labels)
+     * @param index Square index
+     * @param event
+     */
+    void rightButtonPressEvent(QPoint position,
+                               int index,
+                               QGraphicsSceneMouseEvent* event);
+
+    /**
+     * @brief rightButtonReleaseEvent Dispatched from
+     * ChessBoard::mouseReleaseEvent
+     * @param position Scene position, **not** guaranteed to be in the board's
+     * bounding box (which encompasses the squares but not the margin or
+     * rank/file labels)
+     * @param index Square index
+     * @param event
+     */
+    void rightButtonReleaseEvent(QPoint position,
+                                 int index,
+                                 QGraphicsSceneMouseEvent* event);
+
   private:
     /**
      * @brief squareSize Width (or height) of a single square of the board.

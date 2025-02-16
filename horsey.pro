@@ -3,14 +3,15 @@ CONFIG   += c++17 sdk_no_version_check
 
 SOURCES += \
     chessboard.cpp \
+    chessboardarrow.cpp \
     chesspiece.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     chessboard.h \
+    chessboardarrow.h \
     chesspiece.h \
-    global.h \
     mainwindow.h
 
 FORMS += \

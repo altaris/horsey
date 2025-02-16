@@ -73,23 +73,73 @@ ChessBoard::boundingRect() const
 }
 
 void
+ChessBoard::leftButtonMoveEvent(QPoint position,
+                                int index,
+                                QGraphicsSceneMouseEvent* event)
+{
+    Q_UNUSED(event)
+    if (!boundingRect().contains(position)) {
+        return;
+    }
+    ChessPiece* piece =
+      currentPiece == nullptr ? pieceAtSquare(index) : currentPiece;
+    if (piece == nullptr) {
+        return;
+    }
+    piece->setPos(position - piece->boundingRect().center());
+    unhighlightAllSquares();
+    setSquareHighlighted(lastValidPieceIndex[piece]);
+    setSquareHighlighted(index);
+}
+
+void
+ChessBoard::leftButtonPressEvent(QPoint position,
+                                 int index,
+                                 QGraphicsSceneMouseEvent* event)
+{
+    Q_UNUSED(position)
+    Q_UNUSED(event)
+    ChessPiece* piece =
+      currentPiece == nullptr ? pieceAtSquare(index) : currentPiece;
+    if (piece == nullptr) {
+        return;
+    }
+    currentPiece = piece;
+    setSquareHighlighted(index);
+    setCursor(Qt::ClosedHandCursor);
+}
+
+void
+ChessBoard::leftButtonReleaseEvent(QPoint position,
+                                   int index,
+                                   QGraphicsSceneMouseEvent* event)
+{
+    Q_UNUSED(position)
+    Q_UNUSED(index)
+    Q_UNUSED(event)
+    ChessPiece* piece =
+      currentPiece == nullptr ? pieceAtSquare(index) : currentPiece;
+    if (piece != nullptr) {
+        if (pieceCanMove(piece, index)) {
+            movePiece(lastValidPieceIndex[piece], index);
+        } else {
+            piece->setPos(positionOfSquare(lastValidPieceIndex[piece]));
+        }
+    }
+    currentPiece = nullptr;
+    unhighlightAllSquares();
+    setCursor(Qt::OpenHandCursor);
+}
+
+void
 ChessBoard::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
 {
     QPoint scenePos = event->scenePos().toPoint();
-    if (!boundingRect().contains(scenePos)) {
-        return;
-    }
     int index = squareIndexOfPoint(scenePos);
     if (event->buttons() & Qt::LeftButton) {
-        ChessPiece* piece =
-          currentPiece == nullptr ? pieceAtSquare(index) : currentPiece;
-        if (piece == nullptr) {
-            return;
-        }
-        piece->setPos(scenePos - piece->boundingRect().center());
-        unhighlightAllSquares();
-        setSquareHighlighted(lastValidPieceIndex[piece]);
-        setSquareHighlighted(index);
+        leftButtonMoveEvent(scenePos, index, event);
+    } else if (event->buttons() & Qt::RightButton) {
+        rightButtonMoveEvent(scenePos, index, event);
     }
 }
 
@@ -102,14 +152,9 @@ ChessBoard::mousePressEvent(QGraphicsSceneMouseEvent* event)
     }
     int index = squareIndexOfPoint(scenePos);
     if (event->button() == Qt::LeftButton) {
-        ChessPiece* piece =
-          currentPiece == nullptr ? pieceAtSquare(index) : currentPiece;
-        if (piece == nullptr) {
-            return;
-        }
-        currentPiece = piece;
-        setSquareHighlighted(index);
-        setCursor(Qt::ClosedHandCursor);
+        leftButtonPressEvent(scenePos, index, event);
+    } else if (event->button() == Qt::RightButton) {
+        rightButtonPressEvent(scenePos, index, event);
     }
 }
 
@@ -119,19 +164,10 @@ ChessBoard::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
     QPoint scenePos = event->scenePos().toPoint();
     int index = squareIndexOfPoint(scenePos);
     if (event->button() == Qt::LeftButton) {
-        ChessPiece* piece =
-          currentPiece == nullptr ? pieceAtSquare(index) : currentPiece;
-        if (piece != nullptr) {
-            if (pieceCanMove(piece, index)) {
-                movePiece(lastValidPieceIndex[piece], index);
-            } else {
-                piece->setPos(positionOfSquare(lastValidPieceIndex[piece]));
-            }
-        }
-        currentPiece = nullptr;
+        leftButtonReleaseEvent(scenePos, index, event);
+    } else if (event->button() == Qt::RightButton) {
+        rightButtonReleaseEvent(scenePos, index, event);
     }
-    unhighlightAllSquares();
-    setCursor(Qt::OpenHandCursor);
 }
 
 bool
@@ -193,6 +229,36 @@ ChessBoard::removePiece(int index)
 }
 
 void
+ChessBoard::rightButtonMoveEvent(QPoint position,
+                                 int index,
+                                 QGraphicsSceneMouseEvent* event)
+{
+    Q_UNUSED(position)
+    Q_UNUSED(index)
+    Q_UNUSED(event)
+}
+
+void
+ChessBoard::rightButtonPressEvent(QPoint position,
+                                  int index,
+                                  QGraphicsSceneMouseEvent* event)
+{
+    Q_UNUSED(position)
+    Q_UNUSED(index)
+    Q_UNUSED(event)
+}
+
+void
+ChessBoard::rightButtonReleaseEvent(QPoint position,
+                                    int index,
+                                    QGraphicsSceneMouseEvent* event)
+{
+    Q_UNUSED(position)
+    Q_UNUSED(index)
+    Q_UNUSED(event)
+}
+
+void
 ChessBoard::setSquareHighlighted(int index, bool highlighted)
 {
     if (index < 0 || index >= 64) {
@@ -225,7 +291,7 @@ ChessBoard::squareIndexOfPoint(const QPointF& point) const
 void
 ChessBoard::unhighlightAllSquares()
 {
-    for (int i = 0; i < 64; i++) {
+    for (int i = 0; i < 64; i++) {
         setSquareHighlighted(i, false);
     }
 }
